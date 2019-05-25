@@ -11,26 +11,28 @@ public class EnnemyBehaviour : MonoBehaviour
     public Collider2D colPlayer;                               // represente le collider du joueur
     public float posEnnemy;                                    // represente la position de l'ennemi
     public Collider2D colEnnemy;                               // represente le collider de l'ennemi
-    public float area = 15.0f;                                 // zone definie pour l'ennemi
+    public Rigidbody2D rb;                                     // represente le rigidbody de l'ennemi
+    public float area;                                         // zone definie pour l'ennemi
     public float range;                                        // zone de vision de l'ennemi
-    public bool onGoing;                                       // defini si l'ennemi effectue un aller dans sons animation
+    public bool onGoing;                                       // defini si l'ennemi effectue un aller dans son animation
     public bool isInRange;                                     // defini si l'ennemi est a bonne distance du joueur
     public float start;                                        // defini le point de depart de l'annimation de l'ennemi
     public float end;                                          // defini le point d'arrivée de l'annimation de l'ennemi
+    public float vitesse;                                      // represente la vitesse de l'ennemi
 
 
     // Start is called before the first frame update
     void Start()
     {
+        posPlayer = transform.position.x;
         posEnnemy = transform.position.x;
         start = posEnnemy;
         end = posEnnemy + area;
-        posPlayer = player.transform.position.x;
         colPlayer = player.GetComponent<Collider2D>();
-        colEnnemy = GetComponent<Collider2D>();        
+        colEnnemy = GetComponent<Collider2D>();
+        rb = GetComponent<Rigidbody2D>();        
         onGoing = true;
         isInRange = false;
-        colPlayer = player.GetComponent<Collider2D>();
     }
 
     // Update is called once per frame
@@ -48,16 +50,15 @@ public class EnnemyBehaviour : MonoBehaviour
         {
             if((posEnnemy < start) || (posEnnemy > end))
             {
-                onGoing = !onGoing;
-                Vector3 vect = transform.localScale;
-                vect.x*=-1;
-                transform.localScale = vect;
+                Return();
             }
-            Walk();
+            else
+            {
+                Walk();
+            }
         }
         if(colEnnemy.IsTouching(colPlayer))
         {
-            anim.SetTrigger("Attack_ennemy");
             SceneManager.LoadScene(SceneManager.GetActiveScene().name);
         }
         
@@ -68,11 +69,11 @@ public class EnnemyBehaviour : MonoBehaviour
     {
         if(onGoing)
         {
-            transform.position = new Vector3(transform.position.x + 0.1f, 0.0f, 0.0f);
+            rb.velocity = new Vector2(vitesse, 0);
         }
         else
         {
-            transform.position = new Vector3(transform.position.x - 0.1f, 0.0f, 0.0f);
+            rb.velocity = new Vector2(-vitesse, 0);
         }
     }
 
@@ -81,16 +82,44 @@ public class EnnemyBehaviour : MonoBehaviour
     {
         if(posPlayer + 0.1f < posEnnemy)
         {
-            transform.position = new Vector3(transform.position.x - 0.1f, 0.0f, 0.0f);
+            rb.velocity = new Vector2(-vitesse, 0);
         }
         else if(posPlayer - 0.1f > posEnnemy)
         {
-            transform.position = new Vector3(transform.position.x + 0.1f, 0.0f, 0.0f);
+            rb.velocity = new Vector2(vitesse, 0);
         }
         else
         {
             transform.position = player.transform.position;
             anim.ResetTrigger("Run");
+        }
+    }
+
+
+    // permet a l'ennemi de retourner dans sa zone d'origine
+    void Return()
+    {
+        if(posEnnemy < start)
+        {
+            if(!onGoing)
+            {
+                onGoing = !onGoing;
+                Vector2 vect = transform.localScale;
+                vect = new Vector2(-vect.x, vect.y);
+                transform.localScale = vect;
+            }
+            rb.velocity = new Vector2(vitesse, 0);
+        }
+        if(posEnnemy > end)
+        {
+            if(onGoing)
+            {
+                onGoing = !onGoing;
+                Vector2 vect = transform.localScale;
+                vect = new Vector2(-vect.x, vect.y);
+                transform.localScale = vect;
+            }
+            rb.velocity = new Vector2(-vitesse, 0);
         }
     }
 
